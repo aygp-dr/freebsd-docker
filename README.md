@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ci.yml/badge.svg)](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ci.yml)
 [![GHCR Publish](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ghcr-publish.yml/badge.svg)](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ghcr-publish.yml)
-[![FreeBSD](https://img.shields.io/badge/FreeBSD-14.1--RELEASE-red.svg?logo=freebsd)](https://www.freebsd.org/)
+[![FreeBSD](https://img.shields.io/badge/FreeBSD-14.2--RELEASE-red.svg?logo=freebsd)](https://www.freebsd.org/)
 [![License](https://img.shields.io/github/license/aygp-dr/freebsd-docker.svg)](https://github.com/aygp-dr/freebsd-docker/blob/main/LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/aygp-dr/freebsd-docker?style=social)](https://github.com/aygp-dr/freebsd-docker)
 
@@ -20,7 +20,7 @@ Run FreeBSD virtual machines in Docker containers with QEMU, including support f
 
 ## Features
 
-- 🐡 FreeBSD 14.1-RELEASE (latest stable)
+- 🐡 FreeBSD 14.2-RELEASE (latest stable)
 - 🚀 KVM acceleration support
 - 🔒 FreeBSD jails management
 - 💾 ZFS filesystem support
@@ -33,10 +33,10 @@ Run FreeBSD virtual machines in Docker containers with QEMU, including support f
 
 ```bash
 # Simple run
-docker run -it --rm --privileged aygp-dr/freebsd:14.1-RELEASE
+docker run -it --rm --privileged aygp-dr/freebsd:14.2-RELEASE
 
 # With SSH access
-docker run -d --privileged -p 2222:22 aygp-dr/freebsd:14.1-RELEASE
+docker run -d --privileged -p 2222:22 aygp-dr/freebsd:14.2-RELEASE
 ssh -p 2222 root@localhost  # password: freebsd
 
 # Using Docker Compose
@@ -207,7 +207,7 @@ If running without KVM:
 ls /dev/kvm
 
 # Run without KVM (slower)
-docker run --rm -it aygp-dr/freebsd:14.1-RELEASE
+docker run --rm -it aygp-dr/freebsd:14.2-RELEASE
 ```
 
 ### Network Issues

@@ -2,7 +2,7 @@
 # Stage 1: Download FreeBSD ISO and prepare installation
 FROM alpine:3.19 AS downloader
 
-ARG FREEBSD_VERSION=14.1-RELEASE
+ARG FREEBSD_VERSION=14.2-RELEASE
 
 RUN apk add --no-cache curl ca-certificates && \
     ARCH="amd64" && \
@@ -237,7 +237,7 @@ RUN rm -f /build/freebsd.iso
 # Stage 3: Runtime image (minimal)
 FROM alpine:3.19
 
-ARG FREEBSD_VERSION=14.1-RELEASE
+ARG FREEBSD_VERSION=14.2-RELEASE
 ARG BUILD_DATE
 ARG VCS_REF
 

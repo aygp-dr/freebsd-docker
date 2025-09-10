@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        version: ['14.1-RELEASE']
+        version: ['14.2-RELEASE']
     
     steps:
       - name: Checkout code

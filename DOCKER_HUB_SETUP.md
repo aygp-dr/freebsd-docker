@@ -67,7 +67,7 @@ Check your images at:
 https://hub.docker.com/r/aygp-dr/freebsd
 
 Tags created:
-- `aygp-dr/freebsd:14.1-RELEASE`
+- `aygp-dr/freebsd:14.2-RELEASE`
 - `aygp-dr/freebsd:13.2-RELEASE`
 - `aygp-dr/freebsd:latest` (points to 14.0)
 
