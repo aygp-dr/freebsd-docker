@@ -1,5 +1,12 @@
 # FreeBSD Docker Image
 
+[![Build Status](https://github.com/aygp-dr/freebsd-docker/actions/workflows/build.yml/badge.svg)](https://github.com/aygp-dr/freebsd-docker/actions)
+[![Docker Pulls](https://img.shields.io/docker/pulls/aygp-dr/freebsd)](https://hub.docker.com/r/aygp-dr/freebsd)
+[![Docker Image Version](https://img.shields.io/docker/v/aygp-dr/freebsd?sort=semver)](https://hub.docker.com/r/aygp-dr/freebsd/tags)
+[![Docker Image Size](https://img.shields.io/docker/image-size/aygp-dr/freebsd/latest)](https://hub.docker.com/r/aygp-dr/freebsd)
+[![FreeBSD](https://img.shields.io/badge/FreeBSD-14.0--RELEASE-red.svg?logo=freebsd)](https://www.freebsd.org/)
+[![License](https://img.shields.io/github/license/aygp-dr/freebsd-docker)](https://github.com/aygp-dr/freebsd-docker/blob/main/LICENSE)
+
 Run FreeBSD virtual machines in Docker containers with QEMU, including support for jails, ZFS, and advanced networking.
 
 ## Features

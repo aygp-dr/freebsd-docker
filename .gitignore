@@ -1,7 +1,65 @@
-.DS_Store
+# Emacs
+*~
+\#*\#
+.\#*
+*.elc
+auto-save-list
+tramp
+.dir-locals.el
+.projectile
+.cask/
+dist/
+flycheck_*.el
+.projectile
+*.org_archive
+*.org~
+.org-id-locations
+*_archive
+*_flymake.*
+/eshell/history
+/eshell/lastdir
+/elpa/
+*.rel
+/auto/
+.cask/
+dist/
+flycheck_*.el
+/server/
+.projectile
+*.tern-port
+/network-security.data
+
+# Vim
 *.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
 .env
+.env.local
+
+# Docker/QEMU artifacts
 *.qcow2
 *.iso
+*.img
+
+# Workspace
 workspace/*
 !workspace/.gitkeep
+
+# Build artifacts
+build/
+dist/
+
+# Logs
+*.log
+logs/
+
+# Temporary
+tmp/
+temp/
+*.tmp
