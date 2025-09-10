@@ -1,0 +1,207 @@
+{
+  "name": "FreeBSD Development Environment",
+  "dockerComposeFile": "../docker-compose.full.yml",
+  "service": "freebsd-dev",
+  "workspaceFolder": "/workspace",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest",
+      "ppa": true
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true,
+      "dockerDashComposeVersion": "v2"
+    },
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "latest",
+      "helm": "latest",
+      "minikube": "none"
+    },
+    "ghcr.io/devcontainers/features/terraform:1": {
+      "version": "latest",
+      "installTerraformDocs": true
+    },
+    "ghcr.io/devcontainers/features/aws-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts",
+      "nodeGypDependencies": true
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11",
+      "installJupyterlab": true,
+      "configureJupyterlabAllowOrigin": "*"
+    },
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "latest",
+      "profile": "default"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // Core development
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "ms-vscode.makefile-tools",
+        
+        // Git & GitHub
+        "eamodio.gitlens",
+        "GitHub.vscode-pull-request-github",
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "GitHub.codespaces",
+        
+        // Docker & Kubernetes
+        "ms-azuretools.vscode-docker",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "redhat.vscode-yaml",
+        
+        // Cloud providers
+        "amazonwebservices.aws-toolkit-vscode",
+        "ms-azuretools.vscode-azureterraform",
+        "GoogleCloudTools.cloudcode",
+        
+        // Infrastructure as Code
+        "hashicorp.terraform",
+        "hashicorp.hcl",
+        "redhat.ansible",
+        
+        // Languages
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "golang.go",
+        "rust-lang.rust-analyzer",
+        "rebornix.ruby",
+        "haskell.haskell",
+        "betterthantomorrow.calva",
+        
+        // Web development
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "prisma.prisma",
+        
+        // Database
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+        "mtxr.sqltools-driver-mysql",
+        "mtxr.sqltools-driver-sqlite",
+        "mongodb.mongodb-vscode",
+        
+        // Documentation
+        "yzhang.markdown-all-in-one",
+        "bierner.markdown-mermaid",
+        "davidanson.vscode-markdownlint",
+        "redhat.vscode-xml",
+        
+        // Utilities
+        "streetsidesoftware.code-spell-checker",
+        "wayou.vscode-todo-highlight",
+        "gruntfuggly.todo-tree",
+        "usernamehw.errorlens",
+        "oderwat.indent-rainbow",
+        "PKief.material-icon-theme",
+        "zhuangtongfa.material-theme",
+        
+        // AI Tools
+        "Continue.continue",
+        "Codeium.codeium"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "/bin/zsh"
+          },
+          "bash": {
+            "path": "/bin/bash"
+          },
+          "fish": {
+            "path": "/usr/bin/fish"
+          }
+        },
+        "git.autofetch": true,
+        "git.confirmSync": false,
+        "editor.formatOnSave": true,
+        "editor.minimap.enabled": false,
+        "editor.rulers": [80, 120],
+        "files.autoSave": "afterDelay",
+        "files.autoSaveDelay": 1000,
+        "workbench.iconTheme": "material-icon-theme",
+        "workbench.colorTheme": "Material Theme Darker",
+        "python.defaultInterpreterPath": "/usr/bin/python3",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.formatting.provider": "black",
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter"
+        },
+        "[javascript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[json]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[yaml]": {
+          "editor.defaultFormatter": "redhat.vscode-yaml"
+        },
+        "go.toolsManagement.autoUpdate": true,
+        "rust-analyzer.check.command": "clippy"
+      }
+    }
+  },
+
+  "forwardPorts": [
+    2222, 3000, 3001, 3002, 3003,
+    5432, 5601, 5672, 6379,
+    8080, 8090, 8091, 8092, 8093, 8094, 8095,
+    9000, 9010, 9011, 9090, 9100, 9200,
+    15672
+  ],
+
+  "postCreateCommand": "sh -c 'chmod +x scripts/*.sh && ./scripts/install-dev-tools.sh'",
+  "postStartCommand": "echo 'Welcome to FreeBSD Development Environment!' && validate-dev-env",
+  
+  "remoteUser": "root",
+  "overrideCommand": false,
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+  ],
+  
+  "runArgs": [
+    "--privileged",
+    "--cap-add=SYS_ADMIN",
+    "--cap-add=NET_ADMIN",
+    "--security-opt=seccomp=unconfined"
+  ],
+  
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb",
+    "storage": "32gb"
+  }
+}

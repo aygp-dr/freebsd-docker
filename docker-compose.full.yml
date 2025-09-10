@@ -1,0 +1,398 @@
+version: '3.8'
+
+services:
+  # ===== CORE DEVELOPMENT ENVIRONMENT =====
+  freebsd-dev:
+    build: .
+    image: aygp-dr/freebsd:14.0-RELEASE
+    container_name: freebsd-dev
+    hostname: freebsd-dev
+    privileged: true
+    ports:
+      - "2222:22"        # SSH
+      - "5900:5900"      # VNC (optional)
+      - "8080:8080"      # Web apps
+      - "3000:3000"      # Node apps
+      - "4000:4000"      # Phoenix/Rails
+      - "9000:9000"      # Additional services
+    environment:
+      - MEMORY=${MEMORY:-4G}
+      - CPUS=${CPUS:-4}
+      - DISK_SIZE=${DISK_SIZE:-30G}
+      - ZFS_DISK=${ZFS_DISK:-10G}
+      - ENABLE_VNC=${ENABLE_VNC:-false}
+      - NETWORK_MODE=bridge
+      - ENABLE_BRIDGE=true
+    volumes:
+      - ./workspace:/workspace:rw
+      - freebsd-data:/freebsd
+      - shared-data:/shared
+    devices:
+      - /dev/kvm:/dev/kvm
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    networks:
+      - devnet
+    depends_on:
+      - postgres
+      - redis
+      - minio
+
+  # ===== DATABASES =====
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    hostname: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-devuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpass}
+      POSTGRES_DB: ${POSTGRES_DB:-devdb}
+      POSTGRES_MULTIPLE_DATABASES: app_dev,app_test,analytics
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-scripts/postgres:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - devnet
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-devuser}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    hostname: redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redispass}
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - devnet
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===== OBJECT STORAGE =====
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    hostname: minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_DEFAULT_BUCKETS: uploads,backups,artifacts
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9010:9000"  # API
+      - "9011:9001"  # Console
+    networks:
+      - devnet
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # ===== DATABASE ADMIN =====
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    hostname: adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: dracula
+    ports:
+      - "8090:8080"
+    networks:
+      - devnet
+    depends_on:
+      - postgres
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    hostname: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@local.dev}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    ports:
+      - "8091:80"
+    networks:
+      - devnet
+    depends_on:
+      - postgres
+
+  # ===== MONITORING & OBSERVABILITY =====
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    hostname: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - ./config/prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - devnet
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    hostname: grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3001:3000"
+    networks:
+      - devnet
+    depends_on:
+      - prometheus
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    hostname: node-exporter
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    ports:
+      - "9100:9100"
+    networks:
+      - devnet
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    hostname: cadvisor
+    privileged: true
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    ports:
+      - "8092:8080"
+    networks:
+      - devnet
+
+  # ===== MESSAGE QUEUE =====
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-rabbit}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-rabbit}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    networks:
+      - devnet
+
+  # ===== COLLABORATION TOOLS =====
+  gitea:
+    image: gitea/gitea:latest
+    container_name: gitea
+    hostname: gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=postgres:5432
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=${POSTGRES_USER:-devuser}
+      - GITEA__database__PASSWD=${POSTGRES_PASSWORD:-devpass}
+    volumes:
+      - gitea-data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "3002:3000"  # Web UI
+      - "2223:22"    # Git SSH
+    networks:
+      - devnet
+    depends_on:
+      - postgres
+
+  code-server:
+    image: codercom/code-server:latest
+    container_name: code-server
+    hostname: code-server
+    environment:
+      PASSWORD: ${CODE_PASSWORD:-vscode}
+    volumes:
+      - ./workspace:/home/coder/workspace
+      - code-server-data:/home/coder/.local
+    ports:
+      - "8093:8080"
+    networks:
+      - devnet
+
+  # ===== DOCUMENTATION & WIKI =====
+  wikijs:
+    image: ghcr.io/requarks/wiki:2
+    container_name: wikijs
+    hostname: wikijs
+    environment:
+      DB_TYPE: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-devuser}
+      DB_PASS: ${POSTGRES_PASSWORD:-devpass}
+      DB_NAME: wiki
+    volumes:
+      - wiki-data:/wiki/data
+    ports:
+      - "3003:3000"
+    networks:
+      - devnet
+    depends_on:
+      - postgres
+
+  # ===== CI/CD =====
+  drone:
+    image: drone/drone:2
+    container_name: drone
+    hostname: drone
+    environment:
+      DRONE_GITEA_SERVER: http://gitea:3000
+      DRONE_GITEA_CLIENT_ID: ${DRONE_GITEA_CLIENT_ID:-}
+      DRONE_GITEA_CLIENT_SECRET: ${DRONE_GITEA_CLIENT_SECRET:-}
+      DRONE_RPC_SECRET: ${DRONE_RPC_SECRET:-supersecret}
+      DRONE_SERVER_HOST: ${DRONE_HOST:-localhost:8094}
+      DRONE_SERVER_PROTO: http
+      DRONE_DATABASE_DRIVER: postgres
+      DRONE_DATABASE_DATASOURCE: postgres://${POSTGRES_USER:-devuser}:${POSTGRES_PASSWORD:-devpass}@postgres:5432/drone?sslmode=disable
+    volumes:
+      - drone-data:/data
+    ports:
+      - "8094:80"
+    networks:
+      - devnet
+    depends_on:
+      - postgres
+      - gitea
+
+  drone-runner:
+    image: drone/drone-runner-docker:1
+    container_name: drone-runner
+    hostname: drone-runner
+    environment:
+      DRONE_RPC_PROTO: http
+      DRONE_RPC_HOST: drone
+      DRONE_RPC_SECRET: ${DRONE_RPC_SECRET:-supersecret}
+      DRONE_RUNNER_CAPACITY: 2
+      DRONE_RUNNER_NAME: docker-runner
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - devnet
+    depends_on:
+      - drone
+
+  # ===== REVERSE PROXY =====
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    hostname: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8095:8080"  # Traefik Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-data:/etc/traefik
+    networks:
+      - devnet
+
+  # ===== SEARCH =====
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    hostname: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - devnet
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    hostname: kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - devnet
+    depends_on:
+      - elasticsearch
+
+volumes:
+  freebsd-data:
+  postgres-data:
+  redis-data:
+  minio-data:
+  prometheus-data:
+  grafana-data:
+  rabbitmq-data:
+  gitea-data:
+  code-server-data:
+  wiki-data:
+  drone-data:
+  traefik-data:
+  elasticsearch-data:
+  pgadmin-data:
+  shared-data:
+
+networks:
+  devnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16

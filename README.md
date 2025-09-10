@@ -1,8 +1,9 @@
 # FreeBSD Docker Image
 
-[![Build Status](https://github.com/aygp-dr/freebsd-docker/actions/workflows/build.yml/badge.svg)](https://github.com/aygp-dr/freebsd-docker/actions)
+[![CI](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ci.yml/badge.svg)](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ci.yml)
+[![GHCR Publish](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ghcr-publish.yml/badge.svg)](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ghcr-publish.yml)
 [![FreeBSD](https://img.shields.io/badge/FreeBSD-14.0--RELEASE-red.svg?logo=freebsd)](https://www.freebsd.org/)
-[![License](https://img.shields.io/github/license/aygp-dr/freebsd-docker)](https://github.com/aygp-dr/freebsd-docker/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/aygp-dr/freebsd-docker.svg)](https://github.com/aygp-dr/freebsd-docker/blob/main/LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/aygp-dr/freebsd-docker?style=social)](https://github.com/aygp-dr/freebsd-docker)
 
 <!-- Docker Hub badges - will show once repository is created and images are pushed
