@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  freebsd:
+    build: .
+    image: aygp-dr/freebsd:14.0-RELEASE
+    container_name: freebsd-vm
+    privileged: true
+    ports:
+      - "2222:22"
+    environment:
+      - MEMORY=${MEMORY:-2G}
+      - CPUS=${CPUS:-2}
+    volumes:
+      - ./workspace:/workspace:rw
+    restart: unless-stopped
