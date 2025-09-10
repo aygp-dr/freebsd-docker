@@ -14,7 +14,9 @@
 
 Run FreeBSD virtual machines in Docker containers with QEMU, including support for jails, ZFS, and advanced networking.
 
-> **Setup Required**: Docker Hub repository and credentials need to be configured. See [DOCKER_HUB_SETUP.md](DOCKER_HUB_SETUP.md) for instructions.
+> **🚀 Quick Start**: Images available at `ghcr.io/aygp-dr/freebsd` after CI completes. For Docker Hub setup, see [`DOCKER_HUB_SETUP.md`](DOCKER_HUB_SETUP.md).
+
+> **🔧 Codespaces Ready**: This repository includes [devcontainer configuration](.devcontainer/devcontainer.json) for GitHub Codespaces.
 
 ## Features
 
@@ -44,22 +46,39 @@ docker-compose exec freebsd ssh
 
 ## Building
 
+Using the included [`Makefile`](Makefile):
+
 ```bash
-# Build image
-make build
+# Show help (default target)
+gmake
 
-# Run container
-make run
+# Complete build pipeline
+gmake all
 
-# Push to registry
-make push
+# Individual targets
+gmake build    # Build image
+gmake run      # Run container
+gmake audit    # Analyze size and security
+gmake push     # Push to registry
 ```
+
+See [`Makefile`](Makefile) for all available targets.
 
 ## Advanced Usage
 
+### Full Development Stack
+
+Use [`docker-compose.full.yml`](docker-compose.full.yml) for complete stack:
+
+```bash
+gmake compose-up    # Start all services
+gmake compose-logs  # View logs
+gmake compose-down  # Stop all services
+```
+
 ### Environment Configuration
 
-Copy `.env.example` to `.env` and customize:
+Copy [`.env.example`](.env.example) to `.env` and customize:
 
 ```bash
 cp .env.example .env
@@ -147,12 +166,15 @@ graph TD
 
 ## Scripts
 
-- `entrypoint.sh` - Main container entrypoint
-- `install-freebsd.sh` - Automated FreeBSD installation
-- `jail-manager.sh` - Jail creation and management
-- `zfs-setup.sh` - ZFS pool and dataset configuration
-- `network-setup.sh` - Advanced networking setup
-- `health-check.sh` - Container health monitoring
+All scripts are located in the [`scripts/`](scripts/) directory:
+
+- [`entrypoint.sh`](scripts/entrypoint.sh) - Main container entrypoint with multiple operation modes
+- [`install-freebsd.sh`](scripts/install-freebsd.sh) - Automated FreeBSD installation
+- [`jail-manager.sh`](scripts/jail-manager.sh) - Jail creation and management
+- [`zfs-setup.sh`](scripts/zfs-setup.sh) - ZFS pool and dataset configuration  
+- [`network-setup.sh`](scripts/network-setup.sh) - Advanced networking setup
+- [`health-check.sh`](scripts/health-check.sh) - Container health monitoring
+- [`install-dev-tools.sh`](scripts/install-dev-tools.sh) - Install comprehensive development tools
 
 ## Requirements
 
