@@ -3,7 +3,7 @@ version: '3.8'
 services:
   freebsd:
     build: .
-    image: aygp-dr/freebsd:14.0-RELEASE
+    image: aygp-dr/freebsd:14.1-RELEASE
     container_name: freebsd-vm
     privileged: true
     ports:
@@ -32,7 +32,7 @@ services:
   # Optional: FreeBSD build environment
   freebsd-builder:
     build: .
-    image: aygp-dr/freebsd:14.0-RELEASE
+    image: aygp-dr/freebsd:14.1-RELEASE
     container_name: freebsd-builder
     privileged: true
     environment:

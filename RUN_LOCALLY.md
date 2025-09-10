@@ -5,11 +5,11 @@
 Once the CI builds complete, images will be available at:
 ```bash
 # From GitHub Container Registry (no auth needed for public images)
-docker pull ghcr.io/aygp-dr/freebsd:14.0-RELEASE
-docker run -it --rm --privileged ghcr.io/aygp-dr/freebsd:14.0-RELEASE
+docker pull ghcr.io/aygp-dr/freebsd:14.1-RELEASE
+docker run -it --rm --privileged ghcr.io/aygp-dr/freebsd:14.1-RELEASE
 
 # With SSH access
-docker run -d --privileged -p 2222:22 ghcr.io/aygp-dr/freebsd:14.0-RELEASE
+docker run -d --privileged -p 2222:22 ghcr.io/aygp-dr/freebsd:14.1-RELEASE
 ssh -p 2222 root@localhost  # password: freebsd
 ```
 
@@ -85,7 +85,7 @@ vm start ubuntu
 The GitHub Actions will build and publish images automatically. Once complete:
 ```bash
 # On any Linux system with Docker:
-docker pull ghcr.io/aygp-dr/freebsd:14.0-RELEASE
+docker pull ghcr.io/aygp-dr/freebsd:14.1-RELEASE
 ```
 
 ## Quick Test Commands

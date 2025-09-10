@@ -4,7 +4,7 @@ services:
   # ===== CORE DEVELOPMENT ENVIRONMENT =====
   freebsd-dev:
     build: .
-    image: aygp-dr/freebsd:14.0-RELEASE
+    image: aygp-dr/freebsd:14.1-RELEASE
     container_name: freebsd-dev
     hostname: freebsd-dev
     privileged: true

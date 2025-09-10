@@ -32,9 +32,9 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/aygp-dr/freebsd:14.0-RELEASE
+            ghcr.io/aygp-dr/freebsd:14.1-RELEASE
             ghcr.io/aygp-dr/freebsd:latest
           build-args: |
-            FREEBSD_VERSION=14.0-RELEASE
+            FREEBSD_VERSION=14.1-RELEASE
           cache-from: type=gha
           cache-to: type=gha,mode=max
