@@ -7,10 +7,55 @@ services:
     container_name: freebsd-vm
     privileged: true
     ports:
-      - "2222:22"
+      - "2222:22"        # SSH
+      - "5900:5900"      # VNC (optional)
     environment:
       - MEMORY=${MEMORY:-2G}
       - CPUS=${CPUS:-2}
+      - NETWORK_MODE=${NETWORK_MODE:-user}
+      - ENABLE_VNC=${ENABLE_VNC:-false}
+      - ENABLE_BRIDGE=${ENABLE_BRIDGE:-false}
+      - ZFS_DISK=${ZFS_DISK:-}      # e.g., "5G" to add a 5GB ZFS disk
+      - DISK_SIZE=${DISK_SIZE:-10G}
     volumes:
       - ./workspace:/workspace:rw
+      - freebsd-data:/freebsd
+    devices:
+      - /dev/kvm:/dev/kvm  # KVM acceleration (if available)
+    cap_add:
+      - NET_ADMIN         # For bridge networking
+      - SYS_ADMIN         # For advanced features
     restart: unless-stopped
+    networks:
+      - freebsd-net
+
+  # Optional: FreeBSD build environment
+  freebsd-builder:
+    build: .
+    image: aygp-dr/freebsd:14.0-RELEASE
+    container_name: freebsd-builder
+    privileged: true
+    environment:
+      - MEMORY=4G
+      - CPUS=4
+      - ZFS_DISK=20G
+    volumes:
+      - ./workspace:/workspace:rw
+      - builder-data:/freebsd
+    profiles:
+      - builder
+    networks:
+      - freebsd-net
+
+volumes:
+  freebsd-data:
+    driver: local
+  builder-data:
+    driver: local
+
+networks:
+  freebsd-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
