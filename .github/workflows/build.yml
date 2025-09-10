@@ -3,32 +3,108 @@ name: Build FreeBSD Docker Image
 on:
   push:
     branches: [main]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main]
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'FreeBSD version to build'
+        required: false
+        default: '14.0-RELEASE'
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly builds on Monday at 2 AM UTC
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         version: ['14.0-RELEASE', '13.2-RELEASE']
+        include:
+          - version: '14.0-RELEASE'
+            latest: true
     
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
       
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
       
       - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
       
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            aygp-dr/freebsd
+            ghcr.io/${{ github.repository_owner }}/freebsd
+          tags: |
+            type=raw,value=${{ matrix.version }}
+            type=raw,value=latest,enable=${{ matrix.latest == true }}
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha,prefix={{branch}}-
+      
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
-          tags: aygp-dr/freebsd:${{ matrix.version }}
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             FREEBSD_VERSION=${{ matrix.version }}
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+            VCS_REF=${{ github.sha }}
+      
+      - name: Update Docker Hub Description
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.latest == true
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          repository: aygp-dr/freebsd
+          readme-filepath: ./README.md
+          short-description: "FreeBSD virtual machines in Docker with QEMU, jails, and ZFS support"
+  
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    strategy:
+      matrix:
+        version: ['14.0-RELEASE', '13.2-RELEASE']
+    
+    steps:
+      - name: Test image
+        run: |
+          docker run --rm aygp-dr/freebsd:${{ matrix.version }} --version || true
+          docker run --rm --entrypoint /bin/sh aygp-dr/freebsd:${{ matrix.version }} -c "qemu-system-x86_64 --version"
