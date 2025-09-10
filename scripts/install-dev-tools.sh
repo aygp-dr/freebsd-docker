@@ -178,17 +178,45 @@ go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest || true
 # ===== Cloud Provider CLIs =====
 echo "Installing cloud provider CLIs..."
 
-# AWS CLI
-pip install awscli awsebcli aws-sam-cli || true
+# AWS CLI v2 and tools
+echo "Installing AWS CLI v2 and tools..."
+pip install awscli awsebcli aws-sam-cli boto3 aws-shell || true
+# AWS Session Manager Plugin
+cd /tmp
+fetch https://s3.amazonaws.com/session-manager-downloads/plugin/latest/freebsd/sessionmanager-bundle.zip || true
+if [ -f sessionmanager-bundle.zip ]; then
+    unzip -q sessionmanager-bundle.zip
+    pkg install -y session-manager-plugin || true
+    rm -rf sessionmanager-bundle.zip
+fi
+cd -
 
-# Google Cloud SDK
+# AWS CDK and Amplify
+npm install -g aws-cdk @aws-amplify/cli || true
+
+# Google Cloud SDK with all components
+echo "Installing Google Cloud SDK..."
 cd /tmp
 fetch https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-freebsd-x86_64.tar.gz
 tar xzf google-cloud-cli-freebsd-x86_64.tar.gz -C /usr/local/
-/usr/local/google-cloud-sdk/install.sh --quiet
+/usr/local/google-cloud-sdk/install.sh --quiet --additional-components \
+    gke-gcloud-auth-plugin \
+    kubectl \
+    app-engine-python \
+    app-engine-go \
+    cloud-build-local \
+    cloud-datastore-emulator \
+    cloud-firestore-emulator \
+    pubsub-emulator
 ln -s /usr/local/google-cloud-sdk/bin/gcloud /usr/local/bin/
 ln -s /usr/local/google-cloud-sdk/bin/gsutil /usr/local/bin/
+ln -s /usr/local/google-cloud-sdk/bin/bq /usr/local/bin/
 cd -
+
+# Replit CLI and tools
+echo "Installing Replit tools..."
+npm install -g @replit/cli @replit/database @replit/agent || true
+pip install replit replitdb replit-ai || true
 
 # Azure CLI
 pip install azure-cli || true
@@ -261,6 +289,13 @@ mv terragrunt_freebsd_amd64 /usr/local/bin/terragrunt
 # Cloud Development Kit
 npm install -g aws-cdk
 npm install -g cdktf-cli
+
+# AWS specific IaC tools
+npm install -g @serverless/cli || true
+pip install sam-cli chalice || true
+
+# Google Cloud specific tools
+pip install google-cloud-build || true
 
 # ===== Service Mesh & API Gateway Tools =====
 echo "Installing service mesh tools..."
@@ -443,6 +478,13 @@ echo ""
 # Check container tools
 echo "Container Tools:"
 for tool in docker docker-compose kubectl helm k9s; do
+    command -v $tool >/dev/null 2>&1 && echo "  ✓ $tool" || echo "  ✗ $tool"
+done
+echo ""
+
+# Check cloud CLIs
+echo "Cloud Provider CLIs:"
+for tool in aws gcloud az doctl replit; do
     command -v $tool >/dev/null 2>&1 && echo "  ✓ $tool" || echo "  ✗ $tool"
 done
 echo ""

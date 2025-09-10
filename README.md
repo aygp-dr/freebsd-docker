@@ -44,6 +44,15 @@ docker-compose up -d
 docker-compose exec freebsd ssh
 ```
 
+### Cloud Deployments
+
+Comprehensive cloud deployment guides are available in [`CLOUD_CONFIG.md`](CLOUD_CONFIG.md):
+- **AWS**: EC2, ECS, EKS deployments with auto-scaling
+- **Google Cloud**: Compute Engine, GKE, Cloud Run
+- **Replit**: Full integration with Replit environment
+- **Azure**: Container Instances, AKS
+- **DigitalOcean**: Droplets, DOKS
+
 ## Building
 
 Using the included [`Makefile`](Makefile):
