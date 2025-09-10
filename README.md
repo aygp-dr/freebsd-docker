@@ -20,7 +20,7 @@ Run FreeBSD virtual machines in Docker containers with QEMU, including support f
 
 ## Features
 
-- 🐡 FreeBSD 14.2-RELEASE (latest stable)
+- 🐡 FreeBSD 14.3-RELEASE (latest stable)
 - 🚀 KVM acceleration support
 - 🔒 FreeBSD jails management
 - 💾 ZFS filesystem support
@@ -33,10 +33,10 @@ Run FreeBSD virtual machines in Docker containers with QEMU, including support f
 
 ```bash
 # Simple run
-docker run -it --rm --privileged aygp-dr/freebsd:14.2-RELEASE
+docker run -it --rm --privileged aygp-dr/freebsd:14.3-RELEASE
 
 # With SSH access
-docker run -d --privileged -p 2222:22 aygp-dr/freebsd:14.2-RELEASE
+docker run -d --privileged -p 2222:22 aygp-dr/freebsd:14.3-RELEASE
 ssh -p 2222 root@localhost  # password: freebsd
 
 # Using Docker Compose
@@ -207,7 +207,7 @@ If running without KVM:
 ls /dev/kvm
 
 # Run without KVM (slower)
-docker run --rm -it aygp-dr/freebsd:14.2-RELEASE
+docker run --rm -it aygp-dr/freebsd:14.3-RELEASE
 ```
 
 ### Network Issues

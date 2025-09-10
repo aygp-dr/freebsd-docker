@@ -5,7 +5,7 @@
 # Variables
 DOCKER_USER ?= aygp-dr
 IMAGE_NAME ?= freebsd
-VERSION ?= 14.2-RELEASE
+VERSION ?= 14.3-RELEASE
 IMAGE = $(DOCKER_USER)/$(IMAGE_NAME):$(VERSION)
 LATEST = $(DOCKER_USER)/$(IMAGE_NAME):latest
 BUILD_DATE := $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')

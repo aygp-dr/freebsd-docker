@@ -22,9 +22,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ['14.2-RELEASE']
+        version: ['14.3-RELEASE']
         include:
-          - version: '14.2-RELEASE'
+          - version: '14.3-RELEASE'
             latest: true
     
     steps:
@@ -103,7 +103,7 @@ jobs:
     if: github.event_name != 'pull_request'
     strategy:
       matrix:
-        version: ['14.2-RELEASE']
+        version: ['14.3-RELEASE']
     
     steps:
       - name: Test image
