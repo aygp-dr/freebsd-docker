@@ -1,0 +1,42 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ['14.0-RELEASE', '13.2-RELEASE']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg FREEBSD_VERSION=${{ matrix.version }} \
+            --tag freebsd-test:${{ matrix.version }} \
+            --file Dockerfile \
+            .
+      
+      - name: Test image exists
+        run: |
+          docker images freebsd-test:${{ matrix.version }}
+      
+      - name: Test QEMU is installed
+        run: |
+          docker run --rm freebsd-test:${{ matrix.version }} qemu-system-x86_64 --version
+      
+      - name: Check entrypoint
+        run: |
+          docker run --rm freebsd-test:${{ matrix.version }} ls -la /scripts/
