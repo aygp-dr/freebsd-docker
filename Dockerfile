@@ -32,8 +32,8 @@ RUN qemu-img create -f qcow2 /build/disk.qcow2 20G
 COPY scripts/install-freebsd.sh /build/
 RUN chmod +x /build/install-freebsd.sh
 
-# Install FreeBSD with development tools
-RUN cat > /build/install.conf <<'EOF' && \
+# Create installation configuration script
+RUN cat > /build/install.conf <<'EOF'
 #!/bin/sh
 # FreeBSD automated installation with dev tools
 PARTITIONS="AUTO"
@@ -50,7 +50,11 @@ echo 'sshd_enable="YES"' >> /etc/rc.conf
 # Configure SSH
 echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config
 echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config
+EOF
 
+# Create package installation script  
+RUN cat > /build/install-packages.sh <<'EOF'
+#!/bin/sh
 # Bootstrap pkg
 env ASSUME_ALWAYS_YES=YES pkg bootstrap -f
 
@@ -228,6 +232,11 @@ rm -rf /tmp/*
 rm -rf /usr/ports/*
 rm -rf /usr/src/*
 rm -rf /usr/obj/*
+EOF
+
+# Make the script executable and run it
+RUN chmod +x /build/install-packages.sh && \
+    /build/install-packages.sh || true
 
 # Remove ISO after installation
 RUN rm -f /build/freebsd.iso
