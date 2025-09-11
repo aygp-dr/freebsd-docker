@@ -95,23 +95,23 @@ jobs:
         run: |
           echo "Checking for problematic Dockerfile patterns..."
           
-          # Check for orphaned EOF markers
-          if grep -E "^EOF$" Dockerfile | grep -v "^#"; then
-            echo "⚠️  Warning: Found orphaned EOF markers"
-          fi
-          
-          # Check for indented commands outside RUN statements
-          if grep -E "^[[:space:]]+/" Dockerfile | grep -v "^#"; then
+          # Check for indented commands that are not part of line continuations
+          # This excludes lines that follow a backslash continuation
+          if awk '/\\$/ {getline; next} /^[[:space:]]+\// {print NR": "$0}' Dockerfile | grep .; then
             echo "❌ Error: Found indented commands that may cause syntax errors"
-            grep -n -E "^[[:space:]]+/" Dockerfile | grep -v "^#"
             exit 1
           fi
           
           # Check for unmatched heredoc markers
-          heredoc_start=$(grep -c "<<'*EOF" Dockerfile || echo 0)
+          heredoc_start=$(grep -c "<<'EOF'" Dockerfile || echo 0)
           heredoc_end=$(grep -c "^EOF$" Dockerfile || echo 0)
           if [ "$heredoc_start" -ne "$heredoc_end" ]; then
-            echo "⚠️  Warning: Possible unmatched heredoc markers (starts: $heredoc_start, ends: $heredoc_end)"
+            echo "❌ Error: Unmatched heredoc markers (starts: $heredoc_start, ends: $heredoc_end)"
+            echo "Heredoc starts:"
+            grep -n "<<'EOF'" Dockerfile || true
+            echo "Heredoc ends:"
+            grep -n "^EOF$" Dockerfile || true
+            exit 1
           fi
           
           echo "✅ No problematic patterns detected"
