@@ -228,8 +228,6 @@ rm -rf /tmp/*
 rm -rf /usr/ports/*
 rm -rf /usr/src/*
 rm -rf /usr/obj/*
-EOF
-    /build/install-freebsd.sh || true
 
 # Remove ISO after installation
 RUN rm -f /build/freebsd.iso

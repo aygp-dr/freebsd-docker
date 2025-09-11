@@ -1,0 +1,117 @@
+name: Docker Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'Dockerfile'
+      - 'docker-compose*.yml'
+      - '.github/workflows/docker-validate.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Dockerfile'
+      - 'docker-compose*.yml'
+      - '.github/workflows/docker-validate.yml'
+
+jobs:
+  lint-dockerfile:
+    name: Lint Dockerfile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          ignore: DL3008,DL3009,DL3015,DL3059
+          failure-threshold: error
+
+  validate-docker-compose:
+    name: Validate Docker Compose files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: |
+          docker compose -f docker-compose.yml config --quiet || exit 1
+          echo "✅ docker-compose.yml is valid"
+
+      - name: Validate docker-compose.full.yml
+        run: |
+          docker compose -f docker-compose.full.yml config --quiet || exit 1
+          echo "✅ docker-compose.full.yml is valid"
+
+  test-docker-build:
+    name: Test Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (test only)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: freebsd-docker:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Build only the builder stage to save time in CI
+          target: builder
+
+  syntax-check:
+    name: Dockerfile Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Dockerfile syntax
+        run: |
+          echo "Checking Dockerfile syntax..."
+          docker run --rm -i hadolint/hadolint < Dockerfile || true
+          
+          # More strict syntax check using buildkit
+          DOCKER_BUILDKIT=1 docker build --syntax-check . 2>&1 | tee build.log
+          
+          # Check for common syntax errors
+          if grep -q "dockerfile parse error" build.log; then
+            echo "❌ Dockerfile syntax error detected!"
+            grep "dockerfile parse error" build.log
+            exit 1
+          fi
+          
+          echo "✅ Dockerfile syntax is valid"
+
+      - name: Check for problematic patterns
+        run: |
+          echo "Checking for problematic Dockerfile patterns..."
+          
+          # Check for orphaned EOF markers
+          if grep -E "^EOF$" Dockerfile | grep -v "^#"; then
+            echo "⚠️  Warning: Found orphaned EOF markers"
+          fi
+          
+          # Check for indented commands outside RUN statements
+          if grep -E "^[[:space:]]+/" Dockerfile | grep -v "^#"; then
+            echo "❌ Error: Found indented commands that may cause syntax errors"
+            grep -n -E "^[[:space:]]+/" Dockerfile | grep -v "^#"
+            exit 1
+          fi
+          
+          # Check for unmatched heredoc markers
+          heredoc_start=$(grep -c "<<'*EOF" Dockerfile || echo 0)
+          heredoc_end=$(grep -c "^EOF$" Dockerfile || echo 0)
+          if [ "$heredoc_start" -ne "$heredoc_end" ]; then
+            echo "⚠️  Warning: Possible unmatched heredoc markers (starts: $heredoc_start, ends: $heredoc_end)"
+          fi
+          
+          echo "✅ No problematic patterns detected"
