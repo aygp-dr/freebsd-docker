@@ -7,9 +7,11 @@ ARG FREEBSD_VERSION=14.3-RELEASE
 RUN apk add --no-cache curl ca-certificates && \
     ARCH="amd64" && \
     VERSION="${FREEBSD_VERSION}" && \
-    ISO_URL="https://download.freebsd.org/releases/${ARCH}/${VERSION}/FreeBSD-${VERSION}-${ARCH}-disc1.iso" && \
+    ISO_URL="https://download.freebsd.org/ftp/releases/ISO-IMAGES/${VERSION}/FreeBSD-${VERSION}-${ARCH}-disc1.iso" && \
+    echo "Downloading FreeBSD ISO from: ${ISO_URL}" && \
     curl -L -o /freebsd.iso "${ISO_URL}" && \
-    ls -lh /freebsd.iso
+    ls -lh /freebsd.iso && \
+    echo "ISO downloaded successfully"
 
 # Stage 2: Build QEMU image with FreeBSD
 FROM alpine:3.19 AS builder
@@ -238,8 +240,9 @@ EOF
 RUN chmod +x /build/install-packages.sh && \
     /build/install-packages.sh || true
 
-# Remove ISO after installation
-RUN rm -f /build/freebsd.iso
+# Keep ISO for now - installation happens at runtime
+# TODO: Implement proper FreeBSD installation during build
+# RUN rm -f /build/freebsd.iso
 
 # Stage 3: Runtime image (minimal)
 FROM alpine:3.19
@@ -273,6 +276,10 @@ WORKDIR /freebsd
 
 # Copy built disk image from builder
 COPY --from=builder /build/disk.qcow2 /freebsd/disk.qcow2
+
+# Copy FreeBSD ISO for installation (temporary fix)
+# TODO: Pre-install FreeBSD during build phase
+COPY --from=builder /build/freebsd.iso /freebsd/freebsd.iso
 
 # Copy runtime scripts
 COPY scripts/entrypoint.sh /scripts/
