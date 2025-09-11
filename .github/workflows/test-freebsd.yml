@@ -1,0 +1,190 @@
+name: Test FreeBSD VM
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+jobs:
+  test-container-layer:
+    name: Test Container Layer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Pull Docker image
+        run: docker pull aygpdr/freebsd:latest
+      
+      - name: Test Alpine container OS
+        run: |
+          echo "✓ Testing container OS (should be Alpine)..."
+          docker run --rm aygpdr/freebsd:latest cat /etc/os-release | grep -i alpine
+      
+      - name: Test QEMU installation
+        run: |
+          echo "✓ Testing QEMU availability..."
+          docker run --rm aygpdr/freebsd:latest which qemu-system-x86_64
+          docker run --rm aygpdr/freebsd:latest qemu-system-x86_64 --version
+
+  test-freebsd-boot:
+    name: Test FreeBSD VM Boot
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Start FreeBSD container
+        run: |
+          docker run -d --name freebsd-test \
+            --privileged \
+            -p 2222:22 \
+            -e MEMORY=1G \
+            -e CPUS=1 \
+            aygpdr/freebsd:latest
+          
+          echo "✓ Container started"
+          docker ps | grep freebsd-test
+      
+      - name: Check container health
+        run: |
+          echo "Waiting for container to be healthy..."
+          for i in {1..10}; do
+            if docker ps | grep -q "healthy"; then
+              echo "✓ Container is healthy"
+              break
+            fi
+            echo "  Waiting... ($i/10)"
+            sleep 3
+          done
+      
+      - name: Verify QEMU process
+        run: |
+          echo "✓ Checking if QEMU is running..."
+          docker exec freebsd-test pgrep qemu-system || {
+            echo "⚠️ QEMU not running yet, waiting..."
+            sleep 10
+            docker exec freebsd-test pgrep qemu-system
+          }
+      
+      - name: Wait for FreeBSD SSH
+        run: |
+          echo "✓ Waiting for FreeBSD to boot (90 seconds max)..."
+          timeout=90
+          while [ $timeout -gt 0 ]; do
+            if docker exec freebsd-test nc -z localhost 22 2>/dev/null; then
+              echo "✅ FreeBSD SSH port is open!"
+              break
+            fi
+            echo "  Waiting... ($timeout seconds left)"
+            sleep 10
+            timeout=$((timeout - 10))
+          done
+          
+          if [ $timeout -le 0 ]; then
+            echo "❌ FreeBSD did not boot in time"
+            docker logs freebsd-test
+            exit 1
+          fi
+      
+      - name: Test FreeBSD via SSH
+        run: |
+          # Install sshpass
+          sudo apt-get update && sudo apt-get install -y sshpass
+          
+          # Test SSH connection and run FreeBSD commands
+          echo "✓ Testing FreeBSD access via SSH..."
+          
+          sshpass -p 'freebsd' ssh -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=10 \
+            -p 2222 root@localhost 'uname -a' || {
+            echo "⚠️ First SSH attempt failed, retrying..."
+            sleep 10
+            sshpass -p 'freebsd' ssh -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=10 \
+              -p 2222 root@localhost 'uname -a'
+          }
+          
+          echo "✓ Running FreeBSD commands..."
+          sshpass -p 'freebsd' ssh -o StrictHostKeyChecking=no \
+            -p 2222 root@localhost '
+              echo "=== FreeBSD System Info ==="
+              uname -a
+              echo
+              echo "=== FreeBSD Version ==="
+              freebsd-version
+              echo
+              echo "=== Memory Info ==="
+              sysctl hw.physmem hw.usermem
+              echo
+              echo "=== CPU Info ==="
+              sysctl hw.ncpu hw.model
+              echo
+              echo "=== Network Config ==="
+              ifconfig
+              echo
+              echo "=== Package Manager ==="
+              pkg -v
+            ' || true
+      
+      - name: Container logs
+        if: always()
+        run: |
+          echo "=== Container Logs ==="
+          docker logs freebsd-test || true
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop freebsd-test || true
+          docker rm freebsd-test || true
+
+  test-build:
+    name: Test Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: freebsd-test:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  test-compose:
+    name: Test Docker Compose
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Test docker-compose.yml
+        run: |
+          docker compose -f docker-compose.yml config
+          echo "✓ docker-compose.yml is valid"
+      
+      - name: Start with Docker Compose
+        run: |
+          docker compose up -d
+          sleep 5
+          docker compose ps
+          docker compose logs
+      
+      - name: Cleanup
+        if: always()
+        run: docker compose down
