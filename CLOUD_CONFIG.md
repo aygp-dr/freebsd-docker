@@ -233,7 +233,7 @@ version: '3.8'
 
 services:
   freebsd:
-    image: ghcr.io/aygp-dr/freebsd:14.3-RELEASE
+    image: aygpdr/freebsd:14.3-RELEASE  # or ghcr.io/aygp-dr/freebsd:14.3-RELEASE
     container_name: freebsd-replit
     privileged: true
     environment:
@@ -393,7 +393,7 @@ spec:
     spec:
       containers:
       - name: freebsd
-        image: ghcr.io/aygp-dr/freebsd:14.3-RELEASE
+        image: aygpdr/freebsd:14.3-RELEASE  # or ghcr.io/aygp-dr/freebsd:14.3-RELEASE
         securityContext:
           privileged: true
         resources:

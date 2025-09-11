@@ -2,19 +2,17 @@
 
 [![CI](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ci.yml/badge.svg)](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ci.yml)
 [![GHCR Publish](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ghcr-publish.yml/badge.svg)](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ghcr-publish.yml)
-[![FreeBSD](https://img.shields.io/badge/FreeBSD-14.2--RELEASE-red.svg?logo=freebsd)](https://www.freebsd.org/)
+[![FreeBSD](https://img.shields.io/badge/FreeBSD-14.3--RELEASE-red.svg?logo=freebsd)](https://www.freebsd.org/)
 [![License](https://img.shields.io/github/license/aygp-dr/freebsd-docker.svg)](https://github.com/aygp-dr/freebsd-docker/blob/main/LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/aygp-dr/freebsd-docker?style=social)](https://github.com/aygp-dr/freebsd-docker)
 
-<!-- Docker Hub badges - will show once repository is created and images are pushed
-[![Docker Pulls](https://img.shields.io/docker/pulls/aygp-dr/freebsd)](https://hub.docker.com/r/aygp-dr/freebsd)
-[![Docker Image Version](https://img.shields.io/docker/v/aygp-dr/freebsd?sort=semver)](https://hub.docker.com/r/aygp-dr/freebsd/tags)
-[![Docker Image Size](https://img.shields.io/docker/image-size/aygp-dr/freebsd/latest)](https://hub.docker.com/r/aygp-dr/freebsd)
--->
+[![Docker Pulls](https://img.shields.io/docker/pulls/aygpdr/freebsd)](https://hub.docker.com/r/aygpdr/freebsd)
+[![Docker Image Version](https://img.shields.io/docker/v/aygpdr/freebsd?sort=semver)](https://hub.docker.com/r/aygpdr/freebsd/tags)
+[![Docker Image Size](https://img.shields.io/docker/image-size/aygpdr/freebsd/latest)](https://hub.docker.com/r/aygpdr/freebsd)
 
 Run FreeBSD virtual machines in Docker containers with QEMU, including support for jails, ZFS, and advanced networking.
 
-> **🚀 Quick Start**: Images available at `ghcr.io/aygp-dr/freebsd` after CI completes. For Docker Hub setup, see [`DOCKER_HUB_SETUP.md`](DOCKER_HUB_SETUP.md).
+> **🚀 Quick Start**: Images available at `docker.io/aygpdr/freebsd` and `ghcr.io/aygp-dr/freebsd`.
 
 > **🔧 Codespaces Ready**: This repository includes [devcontainer configuration](.devcontainer/devcontainer.json) for GitHub Codespaces.
 
@@ -32,11 +30,14 @@ Run FreeBSD virtual machines in Docker containers with QEMU, including support f
 ## Quick Start
 
 ```bash
+# Pull from Docker Hub
+docker pull aygpdr/freebsd:latest
+
 # Simple run
-docker run -it --rm --privileged aygp-dr/freebsd:14.3-RELEASE
+docker run -it --rm --privileged aygpdr/freebsd:14.3-RELEASE
 
 # With SSH access
-docker run -d --privileged -p 2222:22 aygp-dr/freebsd:14.3-RELEASE
+docker run -d --privileged -p 2222:22 aygpdr/freebsd:14.3-RELEASE
 ssh -p 2222 root@localhost  # password: freebsd
 
 # Using Docker Compose
@@ -49,7 +50,7 @@ docker-compose exec freebsd ssh
 Comprehensive cloud deployment guides are available in [`CLOUD_CONFIG.md`](CLOUD_CONFIG.md):
 - **AWS**: EC2, ECS, EKS deployments with auto-scaling
 - **Google Cloud**: Compute Engine, GKE, Cloud Run
-- **Replit**: Full integration with Replit environment
+- **Replit**: Full integration with Replit environment (see Replit section in [`CLOUD_CONFIG.md`](CLOUD_CONFIG.md))
 - **Azure**: Container Instances, AKS
 - **DigitalOcean**: Droplets, DOKS
 
