@@ -59,7 +59,9 @@ download_iso() {
     mkdir -p "$(dirname "$output")"
     
     # Download with resume support and progress bar
+    # Note: FreeBSD download server requires a User-Agent header
     if curl -L -C - \
+            --user-agent "FreeBSD-Docker/1.0" \
             --progress-bar \
             --retry 3 \
             --retry-delay 5 \
