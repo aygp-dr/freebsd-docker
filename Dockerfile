@@ -7,7 +7,7 @@ ARG FREEBSD_VERSION=14.2-RELEASE
 RUN apk add --no-cache curl ca-certificates && \
     ARCH="amd64" && \
     VERSION="${FREEBSD_VERSION}" && \
-    ISO_URL="https://download.freebsd.org/ftp/releases/amd64/amd64/ISO-IMAGES/${VERSION}/FreeBSD-${VERSION}-${ARCH}-disc1.iso" && \
+    ISO_URL="https://download.freebsd.org/ftp/releases/ISO-IMAGES/${VERSION}/FreeBSD-${VERSION}-${ARCH}-disc1.iso" && \
     echo "Downloading FreeBSD ISO from: ${ISO_URL}" && \
     curl -L -o /freebsd.iso "${ISO_URL}" && \
     ls -lh /freebsd.iso && \
