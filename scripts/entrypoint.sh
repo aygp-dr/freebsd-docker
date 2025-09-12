@@ -110,7 +110,9 @@ check_iso() {
     
     # Try downloading from mirrors
     for mirror in "${MIRRORS[@]}"; do
-        local mirror_url="${mirror}/releases/${ARCH}/${ARCH}/ISO-IMAGES/${FREEBSD_VERSION}/${ISO_FILENAME}"
+        # Extract version number from FREEBSD_VERSION (e.g., "14.2" from "14.2-RELEASE")
+        local version_dir="${FREEBSD_VERSION%-*}"
+        local mirror_url="${mirror}/releases/${ARCH}/${ARCH}/ISO-IMAGES/${version_dir}/${ISO_FILENAME}"
         
         log_info "Trying mirror: ${mirror}"
         
