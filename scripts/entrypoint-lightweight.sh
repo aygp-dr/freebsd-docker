@@ -18,7 +18,7 @@ ISO_URL="https://download.freebsd.org/ftp/releases/${ARCH}/${ARCH}/ISO-IMAGES/${
 
 # Mirror list for fallback (can be extended)
 MIRRORS=(
-    "https://download.freebsd.org/ftp"
+    "https://download.freebsd.org"
 )
 
 # Colors for output
