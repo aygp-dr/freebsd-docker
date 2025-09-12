@@ -31,7 +31,7 @@ RUN apk add --no-cache \
 WORKDIR /freebsd
 
 # Copy scripts
-COPY scripts/entrypoint-lightweight.sh /scripts/entrypoint.sh
+COPY scripts/entrypoint.sh /scripts/
 COPY scripts/health-check.sh /scripts/
 COPY scripts/network-setup.sh /scripts/
 COPY scripts/jail-manager.sh /scripts/
