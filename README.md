@@ -1,8 +1,8 @@
 # FreeBSD Docker Image
 
-[![CI](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ci.yml/badge.svg)](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ci.yml)
-[![GHCR Publish](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ghcr-publish.yml/badge.svg)](https://github.com/aygp-dr/freebsd-docker/actions/workflows/ghcr-publish.yml)
-[![FreeBSD](https://img.shields.io/badge/FreeBSD-14.3--RELEASE-red.svg?logo=freebsd)](https://www.freebsd.org/)
+[![Docker Publish](https://github.com/aygp-dr/freebsd-docker/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/aygp-dr/freebsd-docker/actions/workflows/docker-publish.yml)
+[![Docker Validation](https://github.com/aygp-dr/freebsd-docker/actions/workflows/docker-validate.yml/badge.svg)](https://github.com/aygp-dr/freebsd-docker/actions/workflows/docker-validate.yml)
+[![FreeBSD](https://img.shields.io/badge/FreeBSD-14.2--RELEASE-red.svg?logo=freebsd)](https://www.freebsd.org/)
 [![License](https://img.shields.io/github/license/aygp-dr/freebsd-docker.svg)](https://github.com/aygp-dr/freebsd-docker/blob/main/LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/aygp-dr/freebsd-docker?style=social)](https://github.com/aygp-dr/freebsd-docker)
 
@@ -12,13 +12,16 @@
 
 Run FreeBSD virtual machines in Docker containers with QEMU, including support for jails, ZFS, and advanced networking.
 
-> **🚀 Quick Start**: Images available at `docker.io/aygpdr/freebsd` and `ghcr.io/aygp-dr/freebsd`.
+> **🚀 Quick Start**: Images available at `docker.io/aygpdr/freebsd`.
 
-> **🔧 Codespaces Ready**: This repository includes [devcontainer configuration](.devcontainer/devcontainer.json) for GitHub Codespaces.
+> **⚠️ Known Issues**: 
+> - Build times are currently 30+ minutes due to FreeBSD installation during build (see [#4](https://github.com/aygp-dr/freebsd-docker/issues/4))
+> - GHCR publishing requires permission fix (see [GHCR_SETUP.md](GHCR_SETUP.md))
+> - Apple Silicon Macs require `--platform linux/amd64` (see [#3](https://github.com/aygp-dr/freebsd-docker/issues/3))
 
 ## Features
 
-- 🐡 FreeBSD 14.3-RELEASE (latest stable)
+- 🐡 FreeBSD 14.2-RELEASE (stable)
 - 🚀 KVM acceleration support
 - 🔒 FreeBSD jails management
 - 💾 ZFS filesystem support
@@ -33,12 +36,16 @@ Run FreeBSD virtual machines in Docker containers with QEMU, including support f
 # Pull from Docker Hub
 docker pull aygpdr/freebsd:latest
 
-# Simple run
-docker run -it --rm --privileged aygpdr/freebsd:14.3-RELEASE
+# Simple run (Alpine container with QEMU)
+docker run -it --rm --privileged aygpdr/freebsd:latest
 
-# With SSH access
-docker run -d --privileged -p 2222:22 aygpdr/freebsd:14.3-RELEASE
+# With SSH access (SSH into FreeBSD VM inside container)
+docker run -d --privileged -p 2222:22 aygpdr/freebsd:latest
+# Wait for FreeBSD to boot (60-90 seconds)
 ssh -p 2222 root@localhost  # password: freebsd
+
+# For Apple Silicon Macs (ARM64)
+docker run -d --platform linux/amd64 --privileged -p 2222:22 aygpdr/freebsd:latest
 
 # Using Docker Compose
 docker-compose up -d
@@ -209,6 +216,15 @@ All scripts are located in the [`scripts/`](scripts/) directory:
 
 ## Troubleshooting
 
+### Understanding the Architecture
+
+This container runs FreeBSD inside QEMU inside Alpine Linux:
+```
+Host OS → Docker → Alpine Linux → QEMU → FreeBSD VM
+```
+
+When you first run the container, you'll be in the Alpine shell. FreeBSD runs inside QEMU within this container. Access FreeBSD via SSH on port 22 (mapped to 2222 on host).
+
 ### No KVM Acceleration
 
 If running without KVM:
@@ -217,8 +233,17 @@ If running without KVM:
 ls /dev/kvm
 
 # Run without KVM (slower)
-docker run --rm -it aygp-dr/freebsd:14.3-RELEASE
+docker run --rm -it aygpdr/freebsd:latest
 ```
+
+### Apple Silicon (M1/M2/M3) Macs
+
+Use platform override for x86_64 emulation:
+```bash
+docker pull --platform linux/amd64 aygpdr/freebsd:latest
+docker run -d --platform linux/amd64 --privileged -p 2222:22 aygpdr/freebsd:latest
+```
+See [run-on-arm64-mac.sh](run-on-arm64-mac.sh) for automated setup.
 
 ### Network Issues
 
